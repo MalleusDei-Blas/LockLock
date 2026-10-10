@@ -94,8 +94,13 @@ fun SettingsDialog(
     }
 
     var isDonationDialogVisible by remember { mutableStateOf(false) }
+    var isIgnoredDialogVisible by remember { mutableStateOf(false) }
 
-    if (isDonationDialogVisible) {
+    if (isIgnoredDialogVisible) {
+        IgnoredAppsDialog {
+            isIgnoredDialogVisible = false
+        }
+    } else if (isDonationDialogVisible) {
         DonationDialog {
             isDonationDialogVisible = false
         }
@@ -195,6 +200,16 @@ fun SettingsDialog(
                                             putExtra("is_change_pin", true)
                                         }
                                     context.startActivity(intent)
+                                },
+                                enabled = true
+                            )
+                        }
+                        item {
+                            AnimatedActionButton(
+                                title = "Ignored apps (overlays)",
+                                icon = Icons.Default.Lock,
+                                onClick = {
+                                    isIgnoredDialogVisible = true
                                 },
                                 enabled = true
                             )
