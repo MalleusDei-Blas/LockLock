@@ -36,11 +36,13 @@ const val INTENT_ACTION_APP_UNLOCKED = "nethical.locklock.UNLOCKED"
 val ANTI_UNINSTALL_KEYWORDS = hashSetOf<String>("uninstall","forcestop","security","privacy","shortcut","locklocktscreen","admin","stop")
 // Apps cuyas ventanas flotantes (overlays) deben ignorarse, p.ej. el panel de Volume Styles.
 // Se comparan contra el nombre de la app (en minusculas) o su nombre de paquete.
-val IGNORED_OVERLAY_NAMES = hashSetOf<String>("volume styles", "volumestyles")
+val IGNORED_OVERLAY_NAMES = hashSetOf<String>("volume styles", "volumestyles", "material shade", "materialshade")
 object AppLockerInfo {
     var lockedApps = hashSetOf<String>()
     var isAntiUninstallOn = false
     var systemPackages = hashSetOf<String>()
+    // Apps elegidas por el usuario desde Ajustes -> Ignored apps
+    var ignoredApps = hashSetOf<String>()
 }
 
 
@@ -54,6 +56,7 @@ class AppLockerService : AccessibilityService() {
     private val overlayCache = hashMapOf<String, Boolean>()
 
     private fun isIgnoredOverlay(pkg: String): Boolean {
+        if (AppLockerInfo.ignoredApps.contains(pkg)) return true
         return overlayCache.getOrPut(pkg) {
             val label = try {
                 val ai = packageManager.getApplicationInfo(pkg, 0)
@@ -124,6 +127,8 @@ class AppLockerService : AccessibilityService() {
 
         AppLockerInfo.lockedApps = selectedAppsSp.getStringSet("selected_apps",emptySet<String>())?.toHashSet() ?: hashSetOf()
         AppLockerInfo.isAntiUninstallOn = additionalInfoSp.getBoolean("is_anti_uninstall",false)
+        AppLockerInfo.ignoredApps = getSharedPreferences("ignored_apps", MODE_PRIVATE)
+            .getStringSet("ignored_apps", emptySet<String>())?.toHashSet() ?: hashSetOf()
         
         val filter = IntentFilter().apply {
             addAction(INTENT_ACTION_APP_UNLOCKED)
